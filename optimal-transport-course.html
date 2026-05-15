@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A beginner course in optimal transport</title>
+<script>
+  MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js" async></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+:root {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --ink: #1f1d1a;
+  --ink-muted: #5a544c;
+  --ink-faint: #948c80;
+  --accent: #b85c2c;
+  --accent-soft: #f4e4d6;
+  --rule: #e6e0d6;
+  --rule-strong: #cdc5b5;
+  --code-bg: #f3efe7;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } aside { position: static !important; height: auto !important; } }
+
+aside {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  padding: 36px 20px 36px 28px;
+  border-right: 1px solid var(--rule);
+  font-family: var(--sans); font-size: 13px;
+}
+aside .brand { font-family: var(--serif); font-size: 18px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 4px; }
+aside .sub { color: var(--ink-faint); margin-bottom: 28px; font-size: 12px; }
+aside ol { list-style: none; padding: 0; margin: 0; counter-reset: mod; }
+aside ol > li { counter-increment: mod; margin-bottom: 14px; }
+aside ol > li > a {
+  display: block; color: var(--ink-muted); text-decoration: none; padding: 4px 0;
+  border-left: 2px solid transparent; padding-left: 12px; margin-left: -12px;
+  transition: color .15s, border-color .15s;
+}
+aside ol > li > a::before { content: counter(mod, decimal-leading-zero) "  "; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+aside ol > li > a:hover { color: var(--ink); }
+aside ol > li > a.active { color: var(--accent); border-left-color: var(--accent); }
+aside ol ul { list-style: none; padding: 6px 0 0 18px; margin: 0; font-size: 12px; }
+aside ol ul li a { color: var(--ink-faint); text-decoration: none; display: block; padding: 2px 0; }
+aside ol ul li a:hover { color: var(--ink); }
+
+main { padding: 56px 64px 120px 64px; max-width: 760px; }
+@media (max-width: 900px) { main { padding: 32px 24px 80px 24px; } }
+
+.eyebrow { font-family: var(--sans); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+h1 { font-family: var(--serif); font-weight: 500; font-size: 44px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 14px 0; }
+h2 { font-family: var(--serif); font-weight: 500; font-size: 28px; line-height: 1.2; letter-spacing: -0.01em; margin: 56px 0 12px 0; padding-top: 20px; border-top: 1px solid var(--rule); }
+h2:first-of-type { border-top: none; padding-top: 0; }
+h3 { font-family: var(--serif); font-weight: 500; font-size: 20px; margin: 32px 0 8px 0; letter-spacing: -0.005em; }
+h4 { font-family: var(--sans); font-weight: 500; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); margin: 24px 0 6px 0; }
+p { margin: 0 0 16px 0; }
+a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+em { font-style: italic; }
+strong { font-weight: 500; color: var(--ink); }
+hr { border: none; border-top: 1px solid var(--rule); margin: 40px 0; }
+
+.lede { font-size: 19px; line-height: 1.55; color: var(--ink-muted); margin-bottom: 32px; }
+
+.callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 14px 20px; margin: 20px 0; border-radius: 0 4px 4px 0; }
+.callout h4 { margin-top: 0; color: var(--accent); }
+.callout.note { border-color: var(--rule-strong); background: #f5f1e8; }
+.callout.note h4 { color: var(--ink-muted); }
+
+code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 6px; border-radius: 3px; }
+pre { background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 18px; overflow-x: auto; font-size: 13px; line-height: 1.55; margin: 18px 0; }
+pre code { background: transparent; padding: 0; }
+
+table { border-collapse: collapse; width: 100%; margin: 20px 0; font-size: 15px; font-family: var(--sans); }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+th { font-weight: 500; color: var(--ink-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.fig { margin: 28px 0; padding: 24px; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; }
+.fig .cap { font-family: var(--sans); font-size: 12px; color: var(--ink-faint); margin-top: 12px; line-height: 1.5; }
+.fig .cap b { color: var(--ink-muted); font-weight: 500; }
+
+.demo-controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 12px 0 18px 0; font-family: var(--sans); font-size: 13px; }
+.demo-controls label { display: flex; flex-direction: column; gap: 4px; color: var(--ink-muted); }
+.demo-controls input[type=range] { width: 160px; accent-color: var(--accent); }
+.demo-controls .val { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 500; }
+.demo-controls button { font-family: var(--sans); font-size: 12px; padding: 6px 12px; background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 4px; cursor: pointer; color: var(--ink); }
+.demo-controls button:hover { background: var(--code-bg); }
+
+canvas { display: block; max-width: 100%; }
+
+.exercise { border: 1px dashed var(--rule-strong); padding: 16px 20px; border-radius: 6px; margin: 20px 0; background: var(--bg); }
+.exercise h4 { margin-top: 0; color: var(--accent); font-size: 12px; }
+
+.toc-progress { height: 2px; background: var(--rule); margin-bottom: 24px; border-radius: 2px; overflow: hidden; }
+.toc-progress > div { height: 100%; background: var(--accent); width: 0%; transition: width .2s; }
+
+.kv { font-family: var(--sans); font-size: 13px; color: var(--ink-muted); margin: 20px 0; padding: 14px 18px; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; }
+.kv dt { font-weight: 500; color: var(--ink); margin-top: 8px; }
+.kv dt:first-of-type { margin-top: 0; }
+.kv dd { margin: 2px 0 0 0; }
+
+.refs { font-family: var(--sans); font-size: 14px; }
+.refs li { margin-bottom: 10px; }
+
+footer { font-family: var(--sans); font-size: 12px; color: var(--ink-faint); padding-top: 40px; border-top: 1px solid var(--rule); margin-top: 60px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<aside>
+  <div class="brand">Optimal transport</div>
+  <div class="sub">A beginner course · ~6 hours</div>
+  <div class="toc-progress"><div id="progressBar"></div></div>
+  <ol>
+    <li><a href="#m0" data-mod="m0">Why optimal transport?</a></li>
+    <li><a href="#m1" data-mod="m1">Monge & Kantorovich</a>
+      <ul>
+        <li><a href="#monge">Monge's problem</a></li>
+        <li><a href="#kantorovich">Kantorovich relaxation</a></li>
+        <li><a href="#discrete">Discrete LP</a></li>
+      </ul>
+    </li>
+    <li><a href="#m2" data-mod="m2">The Wasserstein distance</a></li>
+    <li><a href="#m3" data-mod="m3">Duality</a></li>
+    <li><a href="#m4" data-mod="m4">Computation & Sinkhorn</a>
+      <ul>
+        <li><a href="#entropic">Entropic regularization</a></li>
+        <li><a href="#sinkhorn">The Sinkhorn algorithm</a></li>
+        <li><a href="#sinkhorn-demo">Live demo</a></li>
+      </ul>
+    </li>
+    <li><a href="#m5" data-mod="m5">Brenier & continuous OT</a></li>
+    <li><a href="#m6" data-mod="m6">Applications</a>
+      <ul>
+        <li><a href="#wgan">Wasserstein GANs</a></li>
+        <li><a href="#da">Domain adaptation</a></li>
+        <li><a href="#neuro">Neural data alignment</a></li>
+      </ul>
+    </li>
+    <li><a href="#m7" data-mod="m7">Hands-on with POT</a></li>
+    <li><a href="#m8" data-mod="m8">Where to go next</a></li>
+  </ol>
+</aside>
+
+<main>
+
+<div class="eyebrow">A beginner course</div>
+<h1>Optimal transport, from Monge to Sinkhorn</h1>
+<p class="lede">A self-contained tour of optimal transport for someone comfortable with measure theory and convex optimization. We build from Monge's 1781 problem through the Wasserstein distance, Kantorovich duality, and the Sinkhorn algorithm, then turn the machinery onto Wasserstein GANs, domain adaptation, and aligning neural recordings across subjects.</p>
+
+<dl class="kv">
+  <dt>Audience</dt><dd>Researchers and grad students with linear algebra, measure-theoretic probability, and convex optimization in their toolkit.</dd>
+  <dt>Time</dt><dd>About 6 hours read-through, longer with the exercises and code.</dd>
+  <dt>Prerequisites</dt><dd>Comfortable with $\sigma$-algebras, push-forwards $T_\#\mu$, weak convergence of measures, and Lagrangian duality. Python for the hands-on section.</dd>
+  <dt>Goal</dt><dd>By the end, you should be able to read modern OT papers, run computational experiments with <code>POT</code>, and judge when OT is the right tool for a problem.</dd>
+</dl>
+
+<!-- ===================================================================== -->
+<h2 id="m0">Module 0 · Why optimal transport?</h2>
+
+<p>Suppose you have two probability distributions $\mu$ and $\nu$ on $\mathbb{R}^d$ and you want to say <em>how different</em> they are. The textbook answer is some $f$-divergence — KL, total variation, $\chi^2$, Hellinger. They share a problem: they are blind to geometry.</p>
+
+<p>Take two Diracs, $\mu = \delta_0$ and $\nu_\theta = \delta_\theta$. For any $\theta \neq 0$, $\mathrm{KL}(\mu \| \nu_\theta) = +\infty$ and $\mathrm{TV}(\mu, \nu_\theta) = 1$. Whether $\theta = 10^{-6}$ or $\theta = 10^{6}$ doesn't change the answer. That is fine for testing equality, but useless if you want a smooth signal to optimize against — exactly the situation in generative modelling, where you compare an empirical sample distribution to a model.</p>
+
+<p>Optimal transport gives you a metric that <em>knows where mass is</em>. The Wasserstein distance between $\delta_0$ and $\delta_\theta$ is $|\theta|$. It is shaped by the cost of moving mass through the underlying space, which is exactly what you want when the geometry of that space is meaningful.</p>
+
+<div class="callout note">
+  <h4>The transport metaphor</h4>
+  <p>Imagine $\mu$ as piles of sand at various locations and $\nu$ as the holes you need to fill. Each unit of sand moved from $x$ to $y$ costs $c(x, y)$ (typically $\|x - y\|^p$). The optimal-transport problem asks for the cheapest plan that empties every pile and fills every hole. The cost of that plan is your distance.</p>
+</div>
+
+<h3>What you can do with OT</h3>
+<p>Throughout the course we'll see the three application threads you flagged:</p>
+<ul>
+  <li><strong>Computational</strong>. The Sinkhorn algorithm and its variants make OT scale to millions of samples. The <code>POT</code> Python library is the standard toolkit.</li>
+  <li><strong>Machine learning</strong>. Wasserstein GANs use the geometric metric to stabilize generative training. Optimal-transport domain adaptation (OTDA) reweights source samples to match a target distribution.</li>
+  <li><strong>Neuroscience</strong>. Gromov–Wasserstein OT aligns neural recordings across subjects, sessions, or modalities <em>without paired data</em> — only the internal geometry of each recording is used.</li>
+</ul>
+
+<h3>Roadmap</h3>
+<p>Modules 1–3 lay the mathematical foundations: the primal problem, its relaxation, the metric, and the dual. Module 4 is the computational core — entropic regularization and Sinkhorn — which is where modern OT lives in practice. Module 5 covers the continuous case (Brenier's theorem). Modules 6–7 are applications and code. Module 8 points you at the literature.</p>
+
+<!-- ===================================================================== -->
+<h2 id="m1">Module 1 · Monge & Kantorovich</h2>
+
+<h3 id="monge">1.1 Monge's problem (1781)</h3>
+<p>Gaspard Monge, an engineer working for Napoleon's army, asked: given a pile of dirt with mass distribution $\mu$ and a target trench shape $\nu$, what is the cheapest way to push the dirt? Formally, given probability measures $\mu$ on $X$ and $\nu$ on $Y$ and a cost $c \colon X \times Y \to \mathbb{R}_+$, find a <em>transport map</em> $T \colon X \to Y$ that pushes $\mu$ to $\nu$ — that is, $T_\#\mu = \nu$, meaning $\mu(T^{-1}(B)) = \nu(B)$ for every measurable $B$ — minimizing</p>
+<p>$$\inf_T \int_X c\bigl(x, T(x)\bigr)\, d\mu(x) \quad \text{subject to } T_\#\mu = \nu. \tag{Monge}$$</p>
+<p>Two things go wrong with this formulation:</p>
+<ol>
+  <li><strong>Existence can fail</strong>. If $\mu = \delta_0$ and $\nu = \tfrac{1}{2}\delta_{-1} + \tfrac{1}{2}\delta_{+1}$, no map $T$ can split a single point into two. Monge's problem is empty here.</li>
+  <li><strong>Even when maps exist, the constraint $T_\#\mu = \nu$ is highly non-convex</strong>. There is no clean Lagrangian, no clean optimization theory.</li>
+</ol>
+
+<h3 id="kantorovich">1.2 Kantorovich's relaxation (1942)</h3>
+<p>Leonid Kantorovich's insight was to allow mass <em>splitting</em>. Instead of a deterministic map, consider a joint distribution $\pi$ on $X \times Y$ whose marginals are $\mu$ and $\nu$. We call such a $\pi$ a <em>coupling</em> or <em>transport plan</em>, and the set of couplings is</p>
+<p>$$\Pi(\mu, \nu) = \{\pi \in \mathcal{P}(X \times Y) : (\mathrm{proj}_X)_\#\pi = \mu,\ (\mathrm{proj}_Y)_\#\pi = \nu\}.$$</p>
+<p>The Kantorovich problem is</p>
+<p>$$\boxed{\,\mathrm{OT}_c(\mu, \nu) = \inf_{\pi \in \Pi(\mu, \nu)} \int_{X \times Y} c(x, y)\, d\pi(x, y).\,} \tag{K}$$</p>
+<p>Why this works: $\Pi(\mu, \nu)$ is always non-empty (the product measure $\mu \otimes \nu$ is in it), the constraints are linear in $\pi$, and the objective is linear in $\pi$. It's a linear program. When $X, Y$ are compact and $c$ is continuous, Prokhorov's theorem gives compactness of $\Pi(\mu, \nu)$ in the weak-$*$ topology, so the infimum is attained.</p>
+
+<div class="callout">
+  <h4>Monge inside Kantorovich</h4>
+  <p>Every Monge map $T$ corresponds to a deterministic Kantorovich plan $\pi_T = (\mathrm{id}, T)_\#\mu$, supported on the graph of $T$. Kantorovich is a relaxation: $\inf(\text{K}) \leq \inf(\text{Monge})$. A central theme of the theory — Brenier's theorem in Module 5 — is identifying conditions under which the optimal $\pi$ is in fact concentrated on the graph of a map, recovering the Monge solution.</p>
+</div>
+
+<h3 id="discrete">1.3 The discrete case is just an LP</h3>
+<p>When $\mu = \sum_{i=1}^n a_i \delta_{x_i}$ and $\nu = \sum_{j=1}^m b_j \delta_{y_j}$ with $\sum a_i = \sum b_j = 1$, a coupling is an $n \times m$ matrix $P$ with non-negative entries and prescribed marginals. Writing $C_{ij} = c(x_i, y_j)$, the problem becomes</p>
+<p>$$\min_{P \in \mathbb{R}^{n \times m}_+} \langle C, P \rangle \quad \text{s.t.}\quad P\mathbf{1}_m = a,\ P^\top \mathbf{1}_n = b. \tag{LP}$$</p>
+<p>This is a transportation linear program with $nm$ variables and $n + m$ equality constraints (one of which is redundant since $\sum a_i = \sum b_j$). It can be solved exactly with the network simplex method in roughly $O(n^3 \log n)$ for $n = m$. The Hungarian algorithm handles the special case $a = b = \tfrac{1}{n}\mathbf{1}$ with permutation solutions.</p>
+<p>This is the form OT takes in essentially every practical computation: empirical distributions, $a_i = 1/n$, cost matrix $C_{ij} = \|x_i - y_j\|^p$.</p>
+
+<div class="fig">
+  <h4 style="margin-top:0">Try it: discrete OT in 2D</h4>
+  <p style="font-family: var(--sans); font-size: 13px; color: var(--ink-muted); margin-bottom: 8px;">Click on the canvas to place sources (blue, hold shift for targets in red). The grey lines show the optimal coupling computed by a 1-D Hungarian-style match on a sweep direction. Cost is $\|x-y\|^2$.</p>
+  <div class="demo-controls">
+    <button id="otReset">Reset</button>
+    <button id="otRandom">Random sample</button>
+    <span style="color: var(--ink-faint);">Mode: <span id="otMode" class="val">source (blue)</span> · click toggles, shift = target</span>
+  </div>
+  <canvas id="otCanvas" width="700" height="320" style="background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;"></canvas>
+  <div class="cap"><b>Reading the picture.</b> When sources and targets are equal in number, the optimal plan is a permutation. Try clustering sources on the left and targets on the right — every source matches exactly one target, and total squared distance is minimized.</div>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="m2">Module 2 · The Wasserstein distance</h2>
+
+<p>For $p \geq 1$, the $p$-Wasserstein distance between $\mu, \nu \in \mathcal{P}_p(X)$ (probability measures with finite $p$-th moment on a metric space $(X, d)$) is</p>
+<p>$$W_p(\mu, \nu) = \left( \inf_{\pi \in \Pi(\mu, \nu)} \int d(x, y)^p \, d\pi(x, y) \right)^{1/p}.$$</p>
+<p>This is exactly the Kantorovich problem with cost $c = d^p$, raised to the $1/p$. It deserves its own name because of three properties.</p>
+
+<h3>2.1 It's a metric</h3>
+<p>$W_p$ is a metric on $\mathcal{P}_p(X)$:</p>
+<ul>
+  <li>$W_p(\mu, \nu) \geq 0$, with equality iff $\mu = \nu$ (uses positivity of the cost and that the only coupling with zero $d^p$-integral is the diagonal).</li>
+  <li>Symmetry: swap the roles of $X$ and $Y$ in any coupling.</li>
+  <li>Triangle inequality: this is the work. The standard "gluing lemma" composes a coupling of $\mu, \rho$ with one of $\rho, \nu$ to produce a coupling of $\mu, \nu$. Minkowski on $L^p$ then gives the inequality.</li>
+</ul>
+
+<h3>2.2 It metrizes weak convergence (plus moments)</h3>
+<p>For $\mu_n, \mu \in \mathcal{P}_p(\mathbb{R}^d)$, $W_p(\mu_n, \mu) \to 0$ if and only if $\mu_n \rightharpoonup \mu$ <em>and</em> $\int \|x\|^p\, d\mu_n \to \int \|x\|^p\, d\mu$. So Wasserstein controls both shape and tails — a property KL doesn't give you.</p>
+
+<h3>2.3 It has a geodesic structure (Wasserstein space)</h3>
+<p>$(\mathcal{P}_p(\mathbb{R}^d), W_p)$ is a geodesic space. For $W_2$ on Euclidean space, McCann's displacement interpolation gives the geodesic between $\mu_0$ and $\mu_1$:</p>
+<p>$$\mu_t = \bigl((1-t)\,\mathrm{id} + t\, T\bigr)_\#\mu_0, \quad t \in [0, 1],$$</p>
+<p>where $T$ is the optimal Monge map (Brenier, Module 5). This is mass <em>moving along straight lines</em>, not mass cross-fading like the linear interpolation $(1-t)\mu_0 + t\mu_1$ does. Displacement interpolation is the basis for diffusion and flow models that interpolate between distributions.</p>
+
+<h3>2.4 Comparison with other divergences</h3>
+<table>
+<tr><th>Divergence</th><th>$\delta_0$ vs $\delta_\theta$</th><th>Geometry-aware?</th><th>Differentiable in $\theta$?</th></tr>
+<tr><td>KL</td><td>$\infty$ for $\theta \neq 0$</td><td>No</td><td>No</td></tr>
+<tr><td>Total variation</td><td>1 for $\theta \neq 0$</td><td>No</td><td>No</td></tr>
+<tr><td>JS</td><td>$\log 2$ for $\theta \neq 0$</td><td>No</td><td>No</td></tr>
+<tr><td>$W_p$</td><td>$|\theta|$</td><td>Yes</td><td>Yes ($\nabla_\theta = \mathrm{sign}(\theta)$)</td></tr>
+<tr><td>MMD (with characteristic kernel)</td><td>continuous in $\theta$</td><td>Through the kernel</td><td>Yes</td></tr>
+</table>
+
+<div class="exercise">
+  <h4>Exercise 2.1</h4>
+  <p>Let $\mu = \mathcal{N}(m_1, \Sigma_1)$ and $\nu = \mathcal{N}(m_2, \Sigma_2)$ on $\mathbb{R}^d$. Show that</p>
+  <p>$$W_2^2(\mu, \nu) = \|m_1 - m_2\|^2 + \mathrm{tr}\Bigl(\Sigma_1 + \Sigma_2 - 2\bigl(\Sigma_1^{1/2} \Sigma_2 \Sigma_1^{1/2}\bigr)^{1/2}\Bigr).$$</p>
+  <p>Hint: the optimal coupling is the affine push-forward $T(x) = m_2 + A(x - m_1)$ for a particular symmetric positive-semidefinite $A$.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="m3">Module 3 · Duality</h2>
+
+<p>The Kantorovich problem is a linear program in the space of measures. Its LP dual gives a powerful alternate formulation, especially for $W_1$.</p>
+
+<h3>3.1 Kantorovich duality</h3>
+<p>The dual of (K) is</p>
+<p>$$\mathrm{OT}_c(\mu, \nu) = \sup_{(\varphi, \psi)} \left\{ \int \varphi\, d\mu + \int \psi\, d\nu : \varphi(x) + \psi(y) \leq c(x, y) \right\}, \tag{D}$$</p>
+<p>where $\varphi \in L^1(\mu)$, $\psi \in L^1(\nu)$. The functions $(\varphi, \psi)$ are called <em>Kantorovich potentials</em>.</p>
+<p>Strong duality holds whenever $c$ is lower semicontinuous and bounded below — this is a result of Kellerer's. Optimal potentials are <em>$c$-conjugate</em>: $\psi(y) = \inf_x \{c(x,y) - \varphi(x)\}$ and vice versa.</p>
+
+<h3>3.2 The Kantorovich–Rubinstein theorem (W$_1$)</h3>
+<p>When $c(x, y) = d(x, y)$ is a metric, the dual collapses dramatically. The constraint $\varphi(x) + \psi(y) \leq d(x, y)$ together with $c$-conjugacy forces $\psi = -\varphi$ and $\varphi$ to be 1-Lipschitz with respect to $d$. The dual becomes</p>
+<p>$$\boxed{\,W_1(\mu, \nu) = \sup_{\|\varphi\|_{\mathrm{Lip}} \leq 1} \int \varphi\, d\mu - \int \varphi\, d\nu.\,}$$</p>
+<p>This is the Kantorovich–Rubinstein formula. It says the $W_1$ distance is the largest expectation-difference you can produce with a 1-Lipschitz "test function" $\varphi$. We will see in the WGAN section that this is a parametrizable optimization — fit a neural network with a Lipschitz constraint and you have a $W_1$ estimator.</p>
+
+<h3>3.3 Optimality conditions and complementary slackness</h3>
+<p>If $\pi^\star$ and $(\varphi^\star, \psi^\star)$ are optimal, then</p>
+<p>$$\varphi^\star(x) + \psi^\star(y) = c(x, y) \quad \pi^\star\text{-a.s.}$$</p>
+<p>The support of $\pi^\star$ is contained in the <em>$c$-cyclical monotone</em> set $\{(x, y) : \varphi^\star(x) + \psi^\star(y) = c(x, y)\}$. In the discrete case, this is the standard LP complementary slackness on $C_{ij} - \varphi_i - \psi_j \geq 0$ with equality on the support.</p>
+
+<div class="callout note">
+  <h4>Why duality matters in practice</h4>
+  <p>The primal has $nm$ variables for $n$ source points and $m$ target points — quadratic. The dual has only $n + m$ variables. Dual ascent methods (which Sinkhorn essentially is, in disguise) operate in the dual.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="m4">Module 4 · Computation & Sinkhorn</h2>
+
+<p>Solving (LP) exactly is feasible up to $n \approx 10^4$ on a laptop but quickly becomes prohibitive. The trick that unlocked OT for modern data sizes is <em>entropic regularization</em>, due to Cuturi (2013).</p>
+
+<h3 id="entropic">4.1 Entropic regularization</h3>
+<p>Add a relative-entropy penalty to the objective:</p>
+<p>$$\mathrm{OT}_c^\varepsilon(\mu, \nu) = \min_{\pi \in \Pi(\mu, \nu)} \int c\, d\pi + \varepsilon\, H(\pi \| \mu \otimes \nu),$$</p>
+<p>where $H(\pi \| \rho) = \int \log \tfrac{d\pi}{d\rho}\, d\pi$. In the discrete case with reference $\mu \otimes \nu$ replaced by Lebesgue, this is</p>
+<p>$$\min_{P \in \Pi(a, b)} \langle C, P \rangle + \varepsilon \sum_{ij} P_{ij}(\log P_{ij} - 1).$$</p>
+<p>Two reasons this is a great idea:</p>
+<ul>
+  <li><strong>Strong convexity.</strong> The objective becomes strongly convex in $P$, so the minimizer is unique.</li>
+  <li><strong>Closed-form structure.</strong> The Lagrangian over the marginal constraints gives</li>
+</ul>
+<p>$$P^\star_{ij} = u_i\, K_{ij}\, v_j, \quad K_{ij} = \exp(-C_{ij}/\varepsilon),$$</p>
+<p>for some non-negative scaling vectors $u, v$. The whole problem reduces to finding $u, v$ such that $\mathrm{diag}(u) K \mathrm{diag}(v)$ has marginals $a, b$. This is a <em>matrix scaling</em> problem.</p>
+
+<h3 id="sinkhorn">4.2 The Sinkhorn algorithm</h3>
+<p>The matrix-scaling problem is solved by alternating projection. Start with any positive $v^{(0)}$. Iterate</p>
+<p>$$u^{(t+1)} = \frac{a}{K v^{(t)}}, \qquad v^{(t+1)} = \frac{b}{K^\top u^{(t+1)}},$$</p>
+<p>where division is element-wise. Each step makes one marginal exact at the cost of disturbing the other. The iteration converges linearly (in fact, with rate equal to the contraction factor of the Hilbert projective metric on the positive cone). After convergence, $P^\star = \mathrm{diag}(u) K \mathrm{diag}(v)$.</p>
+
+<p>In log-domain, the same iteration becomes a softmin over potentials:</p>
+<p>$$\varphi_i^{(t+1)} = \varepsilon \log a_i - \varepsilon \mathrm{logsumexp}_j\bigl((\psi_j^{(t)} - C_{ij})/\varepsilon\bigr),$$</p>
+<p>and analogously for $\psi$. Log-domain is essential for small $\varepsilon$ where $K_{ij} = e^{-C_{ij}/\varepsilon}$ underflows.</p>
+
+<h3>4.3 The Sinkhorn divergence</h3>
+<p>The entropic plan is biased: $\mathrm{OT}_c^\varepsilon(\mu, \mu) \neq 0$ in general. The fix is the <em>Sinkhorn divergence</em>:</p>
+<p>$$S_\varepsilon(\mu, \nu) = \mathrm{OT}^\varepsilon(\mu, \nu) - \tfrac{1}{2}\mathrm{OT}^\varepsilon(\mu, \mu) - \tfrac{1}{2}\mathrm{OT}^\varepsilon(\nu, \nu).$$</p>
+<p>This interpolates between $W_p^p$ at $\varepsilon = 0$ and the maximum-mean discrepancy MMD$_K$ at $\varepsilon = \infty$. It is positive, $S_\varepsilon(\mu, \nu) = 0 \Leftrightarrow \mu = \nu$, and differentiable — a workhorse loss for generative modelling.</p>
+
+<div class="fig" id="sinkhorn-demo">
+  <h4 style="margin-top:0">Live Sinkhorn iteration</h4>
+  <p style="font-family: var(--sans); font-size: 13px; color: var(--ink-muted); margin-bottom: 8px;">A two-bump source (blue) and a single-bump target (red), 50 bins each on $[0, 1]$. Move the regularization slider and step through Sinkhorn iterations to watch the transport plan condense.</p>
+  <div class="demo-controls">
+    <label>$\varepsilon$ <input type="range" id="sinkEps" min="-3" max="0" step="0.1" value="-1.5"><span class="val" id="sinkEpsVal">0.032</span></label>
+    <label>Iterations <input type="range" id="sinkIter" min="0" max="200" step="1" value="0"><span class="val" id="sinkIterVal">0</span></label>
+    <button id="sinkPlay">Animate</button>
+  </div>
+  <canvas id="sinkCanvas" width="700" height="360" style="background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;"></canvas>
+  <div class="cap"><b>Top:</b> source histogram $a$. <b>Right:</b> target histogram $b$. <b>Center:</b> the transport plan $P^{(t)}$ as a heatmap. Lower $\varepsilon$ produces a sharper plan that approximates the true OT solution; higher $\varepsilon$ blurs toward the independent coupling $a b^\top$.</div>
+</div>
+
+<h3>4.4 Practical considerations</h3>
+<ul>
+  <li><strong>Choose $\varepsilon$ on the cost scale.</strong> Rule of thumb: $\varepsilon \approx 0.05 \cdot \mathrm{median}(C)$.</li>
+  <li><strong>Use log-domain</strong> for any non-trivial problem.</li>
+  <li><strong>Stop early.</strong> Sinkhorn doesn't need to fully converge for downstream gradient signals.</li>
+  <li><strong>GPU it.</strong> Sinkhorn is just matrix-vector products. Libraries like <code>geomloss</code> (Feydy) and <code>POT</code>'s GPU backend run it on millions of samples.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<h2 id="m5">Module 5 · Brenier & continuous OT</h2>
+
+<p>For the squared-Euclidean cost $c(x, y) = \tfrac{1}{2}\|x - y\|^2$ on $\mathbb{R}^d$, the structure of the optimal coupling is remarkably clean.</p>
+
+<h3>5.1 Brenier's theorem</h3>
+<p>Suppose $\mu, \nu \in \mathcal{P}_2(\mathbb{R}^d)$ and $\mu$ is absolutely continuous with respect to Lebesgue measure. Then there exists a unique optimal Monge map $T = \nabla \phi$, where $\phi \colon \mathbb{R}^d \to \mathbb{R}$ is convex. Equivalently, the optimal Kantorovich plan is supported on the graph of $\nabla \phi$.</p>
+<p>Convexity of $\phi$ is forced by $c$-cyclical monotonicity: an optimal coupling supports pairs $(x, y)$ that are <em>monotone</em> in the sense that no swap reduces total cost. For squared cost on $\mathbb{R}^d$, this monotonicity coincides with $T = \nabla \phi$ being the gradient of a convex function.</p>
+
+<h3>5.2 The Monge–Ampère equation</h3>
+<p>If $\mu = f(x)\,dx$ and $\nu = g(y)\,dy$ are smooth densities, the change-of-variables for $T = \nabla \phi$ gives</p>
+<p>$$\det(D^2 \phi(x)) = \frac{f(x)}{g(\nabla \phi(x))}.$$</p>
+<p>This is a fully nonlinear PDE (Monge–Ampère). It's important theoretically and increasingly computationally — neural OT solvers parametrize $\phi$ as an input-convex neural network and learn it directly.</p>
+
+<h3>5.3 Continuous Sinkhorn and Schrödinger bridges</h3>
+<p>The entropic regularization of continuous OT is intimately related to <em>Schrödinger's problem</em>: find the most likely random path of a Brownian particle conditioned to start with distribution $\mu$ and end with $\nu$. The optimal entropic plan converges to the Brenier solution as $\varepsilon \to 0$, with corrections of order $\varepsilon \log \varepsilon$. This connection has driven a wave of work on diffusion-based generative models and flow matching.</p>
+
+<!-- ===================================================================== -->
+<h2 id="m6">Module 6 · Applications</h2>
+
+<h3 id="wgan">6.1 Wasserstein GANs</h3>
+<p>Arjovsky, Chintala &amp; Bottou (2017) replaced the JS-divergence in the original GAN objective with the Wasserstein-1 distance. By Kantorovich–Rubinstein,</p>
+<p>$$W_1(\mathbb{P}_r, \mathbb{P}_g) = \sup_{\|f\|_{\mathrm{Lip}} \leq 1} \mathbb{E}_{x \sim \mathbb{P}_r}[f(x)] - \mathbb{E}_{x \sim \mathbb{P}_g}[f(x)].$$</p>
+<p>Parametrize $f$ as a neural network (the <em>critic</em>) and the generator $g_\theta$ that produces $\mathbb{P}_g$, and the WGAN minimax becomes</p>
+<p>$$\min_\theta \max_{\|f_w\|_{\mathrm{Lip}} \leq 1} \mathbb{E}_{x \sim \mathbb{P}_r}[f_w(x)] - \mathbb{E}_{z \sim \mathbb{P}_z}[f_w(g_\theta(z))].$$</p>
+<p>The Lipschitz constraint is the practical sticking point. The original paper used <em>weight clipping</em> (clamp critic weights to $[-c, c]$). Gulrajani et al. (2017) introduced the <em>gradient penalty</em>, adding $\lambda \mathbb{E}[(\|\nabla_{\hat x} f_w(\hat x)\|_2 - 1)^2]$ to the critic loss, evaluated on samples $\hat x$ along straight lines between real and fake. Spectral normalization (Miyato 2018) is the modern alternative.</p>
+
+<p>Empirically, WGAN-GP gives a smooth meaningful loss (the critic loss tracks $W_1$, so it correlates with sample quality) and avoids the mode-collapse pathologies of vanilla GANs. The price is needing more critic updates per generator update — the critic must be near-optimal for the Wasserstein estimate to be useful.</p>
+
+<h3 id="da">6.2 Domain adaptation with OT</h3>
+<p>Setup: labelled source $\{(x_i^s, y_i^s)\}$ and unlabelled target $\{x_j^t\}$ from different distributions. Goal: classify the target.</p>
+<p>Courty et al. (2017) proposed: compute the OT plan $P^\star$ between source and target empirical distributions. Then transform each source point to its barycentric image in the target,</p>
+<p>$$\hat x_i^s = \arg\min_x \sum_j P^\star_{ij}\, c(x, x_j^t) = \frac{\sum_j P^\star_{ij}\, x_j^t}{\sum_j P^\star_{ij}}\quad (\text{quadratic cost}),$$</p>
+<p>and train a classifier on the transported labelled set $\{(\hat x_i^s, y_i^s)\}$. The OT plan can be regularized with a class-aware term that encourages source points of the same class to map to nearby target points.</p>
+
+<p>JDOT (Courty 2017) goes further: jointly transport features and labels, optimizing classifier and coupling together. This leads naturally to <em>deep OT</em> domain adaptation methods, which add a Wasserstein-distance term between source and target feature distributions to a classifier's loss.</p>
+
+<h3 id="neuro">6.3 Aligning neural recordings</h3>
+<p>Neural decoding research often runs into a basic problem: recordings from different subjects, sessions, or even probe insertions have different latent geometries. Naively pooling data fails. The classical fix is hyperalignment (Haxby 2011) — but it requires <em>shared stimuli</em>, paired data.</p>
+
+<p><strong>Gromov–Wasserstein for unsupervised alignment.</strong> When you have two point clouds in possibly different ambient spaces, with cost matrices $C^X$ on space $X$ and $C^Y$ on space $Y$, the Gromov–Wasserstein distance is</p>
+<p>$$\mathrm{GW}^2(\mu, \nu) = \inf_{\pi \in \Pi(\mu, \nu)} \int \bigl(C^X(x, x') - C^Y(y, y')\bigr)^2\, d\pi(x, y)\, d\pi(x', y').$$</p>
+<p>It minimizes distortion of pairwise distances rather than transport cost — so it doesn't need a common space. Two recordings of $n$ neurons each, summarized as $n \times n$ correlation matrices, can be aligned with GW even when neurons are unidentified across subjects. This is exactly the setup of recent work using GW-OT for fMRI alignment (Thual et al., Bazeille et al.) and for the open-source GW-OT toolbox introduced in <em>Sasaki et al. (2025, J. Neurosci. Methods)</em>.</p>
+
+<p><strong>OT for trial-to-trial neural variability.</strong> Each trial gives a population firing-rate vector or low-dimensional latent state. Treating the set of trials in condition A as $\mu$ and condition B as $\nu$, the Wasserstein distance between them is a geometry-aware effect-size measure. Unlike a Euclidean distance between centroids, it is sensitive to changes in trial-to-trial variability structure.</p>
+
+<p><strong>Neural data interpolation.</strong> Displacement interpolation along the $W_2$ geodesic between two recordings produces intermediate "synthetic" populations — useful for hypothesizing how representations evolve smoothly across conditions, drug states, or learning stages.</p>
+
+<p><strong>Brain–image alignment (Xiao et al., ICCV 2025).</strong> Recent work uses $W_2$ between fMRI voxel embeddings and CLIP-style image embeddings as a cost matrix to construct controlled transport plans for visual decoding. The OT framing helps disentangle redundant from synergistic information in the cross-modal mapping.</p>
+
+<h3>6.4 Single-cell and other applications</h3>
+<p>OT lets you predict how perturbations move cell-state distributions (Klein et al., Schiebinger et al.), align spatial transcriptomics datasets, do shape interpolation in graphics, color transfer in images, and more. The pattern is the same: when your data is naturally a distribution and the geometry of the underlying space is meaningful, OT is a candidate metric.</p>
+
+<!-- ===================================================================== -->
+<h2 id="m7">Module 7 · Hands-on with POT</h2>
+
+<p>The <code>POT</code> library (<code>pip install POT</code>) is the de-facto Python toolkit for OT. We'll work through five recipes covering the core operations.</p>
+
+<h4>Setup</h4>
+<pre><code class="language-python">import numpy as np
+import ot              # POT
+import matplotlib.pyplot as plt
+
+rng = np.random.default_rng(0)</code></pre>
+
+<h4>Recipe 1 — Exact OT between two empirical distributions</h4>
+<pre><code class="language-python">n, m = 50, 60
+xs = rng.normal(loc=0.0, scale=1.0, size=(n, 2))
+xt = rng.normal(loc=4.0, scale=1.0, size=(m, 2))
+
+a = np.ones(n) / n
+b = np.ones(m) / m
+M = ot.dist(xs, xt, metric='sqeuclidean')   # cost matrix
+
+P = ot.emd(a, b, M)                          # exact LP (network simplex)
+W2_sq = np.sum(P * M)
+print(f"W_2^2 = {W2_sq:.4f}")</code></pre>
+
+<h4>Recipe 2 — Sinkhorn (entropic OT)</h4>
+<pre><code class="language-python">eps = 0.05 * M.max()
+P_eps = ot.sinkhorn(a, b, M, reg=eps, numItermax=500)
+print("Sinkhorn cost:", np.sum(P_eps * M))
+
+# Stable log-domain version, useful for small eps
+P_log = ot.bregman.sinkhorn_log(a, b, M, reg=eps)</code></pre>
+
+<h4>Recipe 3 — Sinkhorn divergence as a loss</h4>
+<pre><code class="language-python">def sinkhorn_div(xs, xt, eps):
+    n, m = len(xs), len(xt)
+    a, b = np.ones(n)/n, np.ones(m)/m
+    Mst = ot.dist(xs, xt, metric='sqeuclidean')
+    Mss = ot.dist(xs, xs, metric='sqeuclidean')
+    Mtt = ot.dist(xt, xt, metric='sqeuclidean')
+    s_st = ot.sinkhorn2(a, b, Mst, eps)
+    s_ss = ot.sinkhorn2(a, a, Mss, eps)
+    s_tt = ot.sinkhorn2(b, b, Mtt, eps)
+    return s_st - 0.5 * s_ss - 0.5 * s_tt
+
+print("S_eps =", sinkhorn_div(xs, xt, eps=1.0))</code></pre>
+
+<h4>Recipe 4 — Domain adaptation by OT</h4>
+<pre><code class="language-python">from sklearn.datasets import make_moons
+from sklearn.linear_model import LogisticRegression
+
+# Source: standard moons. Target: rotated and shifted.
+Xs, ys = make_moons(n_samples=300, noise=0.05, random_state=0)
+theta = np.deg2rad(35)
+R = np.array([[np.cos(theta), -np.sin(theta)],
+              [np.sin(theta),  np.cos(theta)]])
+Xt = Xs @ R.T + np.array([2.5, 1.0])
+
+# Vanilla classifier (trained on source) on target
+clf = LogisticRegression().fit(Xs, ys)
+print("Naive target accuracy:", clf.score(Xt, ys))
+
+# OT-mapped source -> target, then train
+ot_da = ot.da.SinkhornTransport(reg_e=1e-1)
+ot_da.fit(Xs=Xs, Xt=Xt)
+Xs_t = ot_da.transform(Xs=Xs)
+clf2 = LogisticRegression().fit(Xs_t, ys)
+print("OT-DA target accuracy:", clf2.score(Xt, ys))</code></pre>
+
+<h4>Recipe 5 — Gromov–Wasserstein for unsupervised alignment</h4>
+<pre><code class="language-python"># Two point clouds in different spaces (no shared coordinates)
+X = rng.normal(size=(40, 5))   # 40 points in 5D
+Y = rng.normal(size=(40, 8))   # 40 points in 8D, unrelated coords
+
+C1 = ot.dist(X, X)             # intra-set distance matrices
+C2 = ot.dist(Y, Y)
+p, q = np.ones(40)/40, np.ones(40)/40
+
+T_gw, log = ot.gromov.gromov_wasserstein(
+    C1, C2, p, q, loss_fun='square_loss', log=True)
+print("GW distortion:", log['gw_dist'])
+
+# T_gw is the alignment plan. argmax along axis=1 gives a soft assignment.
+matches = T_gw.argmax(axis=1)</code></pre>
+
+<div class="exercise">
+  <h4>Exercise 7.1 — applied to your work</h4>
+  <p>Pull two sessions of neural data (your own, or a public dataset like <em>Steinmetz et al.</em> on Figshare). Form firing-rate matrices $X^{(1)} \in \mathbb{R}^{N_1 \times T}$ and $X^{(2)} \in \mathbb{R}^{N_2 \times T}$ where rows are neurons and columns are time bins. Use intra-session correlation matrices as the cost in GW-OT and inspect the assignment $T^\star$. Compare with a CCA alignment baseline.</p>
+</div>
+
+<!-- ===================================================================== -->
+<h2 id="m8">Module 8 · Where to go next</h2>
+
+<h3>Books and lecture notes</h3>
+<ul class="refs">
+  <li><a href="https://optimaltransport.github.io/book/">Peyré &amp; Cuturi — <em>Computational Optimal Transport</em></a>. The standard reference. Free online.</li>
+  <li>Villani — <em>Optimal Transport, Old and New</em> (Springer, 2009). The classical theory at full strength.</li>
+  <li>Santambrogio — <em>Optimal Transport for Applied Mathematicians</em> (Birkhäuser, 2015). Cleaner exposition for applied-math readers.</li>
+  <li><a href="https://www.math.columbia.edu/~mnutz/docs/EOT_lecture_notes.pdf">Nutz — entropic OT lecture notes</a>.</li>
+</ul>
+
+<h3>Software</h3>
+<ul class="refs">
+  <li><a href="https://pythonot.github.io/">POT — Python Optimal Transport</a> — the everything library.</li>
+  <li><a href="https://www.kernel-operations.io/geomloss/">geomloss</a> — fast GPU Sinkhorn divergences via PyTorch.</li>
+  <li><a href="https://ott-jax.readthedocs.io/">OTT-JAX</a> — JAX-native, neural-OT-friendly.</li>
+</ul>
+
+<h3>Key papers</h3>
+<ul class="refs">
+  <li>Cuturi (2013) — <em>Sinkhorn distances: lightspeed computation of optimal transport</em>. NeurIPS.</li>
+  <li>Arjovsky, Chintala &amp; Bottou (2017) — <em>Wasserstein GAN</em>. ICML. <a href="https://arxiv.org/abs/1701.07875">arXiv:1701.07875</a></li>
+  <li>Gulrajani et al. (2017) — <em>Improved training of Wasserstein GANs</em>. NeurIPS.</li>
+  <li>Courty et al. (2017) — <em>Optimal transport for domain adaptation</em>. IEEE TPAMI.</li>
+  <li>Mémoli (2011) — <em>Gromov–Wasserstein distances and the metric approach to object matching</em>. FoCM.</li>
+  <li>Sasaki et al. (2025) — <em>Unsupervised alignment in neuroscience: a toolbox for Gromov–Wasserstein optimal transport</em>. J. Neuroscience Methods.</li>
+  <li>Xiao et al. (2025) — <em>Optimal transport for brain-image alignment</em>. ICCV. <a href="https://arxiv.org/abs/2503.10663">arXiv:2503.10663</a></li>
+</ul>
+
+<h3>If you want to teach yourself OT for neural data, do this</h3>
+<ol>
+  <li>Run all five POT recipes above on your own data.</li>
+  <li>Reproduce a single figure from the GW-OT neuroscience toolbox paper.</li>
+  <li>Read Peyré &amp; Cuturi chapters 2–4 (theory) and 5 (entropic).</li>
+  <li>Implement Sinkhorn from scratch in NumPy in log-domain. Compare with POT's output. The exercise of debugging numerical underflow teaches you more than any reading.</li>
+  <li>Try GW-OT on two sessions of recording. Iterate.</li>
+</ol>
+
+<footer>
+  Course built April 2026. Equations rendered with MathJax, code highlighted with highlight.js.<br>
+  Open in any browser — no server required, no data collected.
+</footer>
+
+</main>
+</div>
+
+<!-- =================== Interactive demos =================== -->
+<script>
+// Highlight code blocks once HLJS loads
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.hljs) document.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+});
+
+// ---- TOC active state and progress bar ----
+const sections = document.querySelectorAll('h2[id]');
+const tocLinks = document.querySelectorAll('aside ol > li > a[data-mod]');
+const bar = document.getElementById('progressBar');
+function updateScroll() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.body.scrollHeight - window.innerHeight;
+  bar.style.width = Math.min(100, (scrollTop / docHeight) * 100) + '%';
+  let active = sections[0];
+  sections.forEach(s => { if (s.getBoundingClientRect().top < 120) active = s; });
+  tocLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + active.id));
+}
+window.addEventListener('scroll', updateScroll, { passive: true });
+window.addEventListener('resize', updateScroll);
+updateScroll();
+
+// ---- Demo 1: discrete OT in 2D ----
+(function() {
+  const cv = document.getElementById('otCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  let sources = [], targets = [];
+  const modeLabel = document.getElementById('otMode');
+
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    cv.width = r.width * devicePixelRatio;
+    cv.height = 320 * devicePixelRatio;
+    cv.style.height = '320px';
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    draw();
+  }
+  function draw() {
+    const W = cv.width / devicePixelRatio, H = cv.height / devicePixelRatio;
+    ctx.clearRect(0, 0, W, H);
+    // Compute matching when |sources|==|targets| via Hungarian-on-2D-projection (simple brute for small n)
+    let plan = [];
+    if (sources.length === targets.length && sources.length > 0) {
+      plan = solveOT(sources, targets);
+    }
+    // draw plan lines first
+    ctx.strokeStyle = 'rgba(120,108,90,0.55)';
+    ctx.lineWidth = 1;
+    plan.forEach(([i, j]) => {
+      ctx.beginPath();
+      ctx.moveTo(sources[i].x, sources[i].y);
+      ctx.lineTo(targets[j].x, targets[j].y);
+      ctx.stroke();
+    });
+    // points
+    sources.forEach(p => {
+      ctx.fillStyle = '#3563a8'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+    });
+    targets.forEach(p => {
+      ctx.fillStyle = '#b85c2c'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+    });
+    // info
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#5a544c';
+    const info = sources.length === targets.length && sources.length > 0
+      ? `n = ${sources.length} sources, ${targets.length} targets · cost = ${costOf(plan).toFixed(0)}`
+      : `${sources.length} sources, ${targets.length} targets — need equal counts to compute plan`;
+    ctx.fillText(info, 12, H - 12);
+  }
+  function costOf(plan) {
+    return plan.reduce((s, [i, j]) => {
+      const dx = sources[i].x - targets[j].x, dy = sources[i].y - targets[j].y;
+      return s + dx*dx + dy*dy;
+    }, 0);
+  }
+  // Hungarian algorithm (O(n^3))
+  function solveOT(src, tgt) {
+    const n = src.length;
+    const cost = Array.from({length: n}, (_, i) => Array.from({length: n}, (_, j) => {
+      const dx = src[i].x - tgt[j].x, dy = src[i].y - tgt[j].y;
+      return dx*dx + dy*dy;
+    }));
+    // Jonker-Volgenant style; for n<=20 a simple algorithm suffices
+    const u = new Array(n+1).fill(0), v = new Array(n+1).fill(0);
+    const p = new Array(n+1).fill(0), way = new Array(n+1).fill(0);
+    for (let i = 1; i <= n; i++) {
+      p[0] = i;
+      let j0 = 0;
+      const minv = new Array(n+1).fill(Infinity);
+      const used = new Array(n+1).fill(false);
+      do {
+        used[j0] = true;
+        const i0 = p[j0]; let delta = Infinity, j1 = 0;
+        for (let j = 1; j <= n; j++) {
+          if (!used[j]) {
+            const cur = cost[i0-1][j-1] - u[i0] - v[j];
+            if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+            if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+          }
+        }
+        for (let j = 0; j <= n; j++) {
+          if (used[j]) { u[p[j]] += delta; v[j] -= delta; }
+          else minv[j] -= delta;
+        }
+        j0 = j1;
+      } while (p[j0] !== 0);
+      do { const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; } while (j0);
+    }
+    const ans = [];
+    for (let j = 1; j <= n; j++) if (p[j]) ans.push([p[j]-1, j-1]);
+    return ans;
+  }
+  cv.addEventListener('click', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (e.shiftKey) { targets.push({x, y}); modeLabel.textContent = 'target (red)'; }
+    else { sources.push({x, y}); modeLabel.textContent = 'source (blue)'; }
+    draw();
+  });
+  document.getElementById('otReset').addEventListener('click', () => { sources = []; targets = []; draw(); });
+  document.getElementById('otRandom').addEventListener('click', () => {
+    sources = []; targets = [];
+    const W = cv.width / devicePixelRatio, H = cv.height / devicePixelRatio;
+    for (let i = 0; i < 8; i++) {
+      sources.push({ x: 60 + Math.random() * 200, y: 40 + Math.random() * (H-80) });
+      targets.push({ x: W - 260 + Math.random() * 200, y: 40 + Math.random() * (H-80) });
+    }
+    draw();
+  });
+  window.addEventListener('resize', resize);
+  resize();
+})();
+
+// ---- Demo 2: Sinkhorn iteration heatmap ----
+(function() {
+  const cv = document.getElementById('sinkCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const N = 50;
+  // Source: bimodal, Target: unimodal
+  function gauss(x, mu, s) { return Math.exp(-((x-mu)*(x-mu))/(2*s*s)); }
+  const a = new Array(N).fill(0).map((_, i) => {
+    const x = i / (N-1);
+    return gauss(x, 0.2, 0.07) + 0.7 * gauss(x, 0.55, 0.05);
+  });
+  const b = new Array(N).fill(0).map((_, j) => {
+    const y = j / (N-1);
+    return gauss(y, 0.7, 0.09);
+  });
+  const sa = a.reduce((s,v)=>s+v,0); a.forEach((_,i)=>a[i]/=sa);
+  const sb = b.reduce((s,v)=>s+v,0); b.forEach((_,j)=>b[j]/=sb);
+  // Cost matrix C[i][j] = (i-j)^2 / (N-1)^2
+  const C = Array.from({length: N}, (_, i) =>
+    Array.from({length: N}, (_, j) => Math.pow((i-j)/(N-1), 2))
+  );
+
+  const epsSlider = document.getElementById('sinkEps');
+  const epsVal = document.getElementById('sinkEpsVal');
+  const iterSlider = document.getElementById('sinkIter');
+  const iterVal = document.getElementById('sinkIterVal');
+  const playBtn = document.getElementById('sinkPlay');
+
+  function sinkhorn(eps, T) {
+    const K = C.map(row => row.map(c => Math.exp(-c/eps)));
+    let u = new Array(N).fill(1), v = new Array(N).fill(1);
+    for (let t = 0; t < T; t++) {
+      // u = a / (K v)
+      const Kv = new Array(N).fill(0);
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) Kv[i] += K[i][j] * v[j];
+      for (let i = 0; i < N; i++) u[i] = a[i] / Math.max(Kv[i], 1e-30);
+      const Ku = new Array(N).fill(0);
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) Ku[j] += K[i][j] * u[i];
+      for (let j = 0; j < N; j++) v[j] = b[j] / Math.max(Ku[j], 1e-30);
+    }
+    const P = Array.from({length: N}, () => new Array(N).fill(0));
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) P[i][j] = u[i] * K[i][j] * v[j];
+    return P;
+  }
+
+  function colorAt(t) {
+    // off-white -> orange ramp
+    const r = Math.round(255 - t*100);
+    const g = Math.round(245 - t*135);
+    const blu = Math.round(225 - t*180);
+    return `rgb(${r},${g},${blu})`;
+  }
+
+  function draw() {
+    const eps = Math.pow(10, parseFloat(epsSlider.value));
+    const T = parseInt(iterSlider.value);
+    epsVal.textContent = eps.toFixed(3);
+    iterVal.textContent = T;
+
+    const P = sinkhorn(eps, T);
+    const Pmax = Math.max(...P.flat()) || 1;
+
+    const r = cv.getBoundingClientRect();
+    cv.width = r.width * devicePixelRatio;
+    cv.height = 360 * devicePixelRatio;
+    cv.style.height = '360px';
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    const W = cv.width / devicePixelRatio, H = cv.height / devicePixelRatio;
+
+    ctx.clearRect(0,0,W,H);
+    const margin = 60, plotSize = Math.min(W - 2*margin - 80, H - 2*margin);
+    const ox = margin + 60, oy = 30;
+
+    // top: source histogram
+    const amax = Math.max(...a);
+    ctx.fillStyle = '#3563a8';
+    for (let i = 0; i < N; i++) {
+      const w = plotSize / N;
+      const h = (a[i]/amax) * 35;
+      ctx.fillRect(ox + i*w, oy + 35 - h, w*0.92, h);
+    }
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.fillStyle = '#5a544c'; ctx.fillText('a (source)', ox, 18);
+
+    // right: target histogram
+    const bmax = Math.max(...b);
+    ctx.fillStyle = '#b85c2c';
+    for (let j = 0; j < N; j++) {
+      const h = plotSize / N;
+      const w = (b[j]/bmax) * 35;
+      ctx.fillRect(ox + plotSize + 4, oy + 80 + j*h, w, h*0.92);
+    }
+    ctx.fillStyle = '#5a544c'; ctx.fillText('b (target)', ox + plotSize + 4, 18);
+
+    // center: heatmap of P
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        ctx.fillStyle = colorAt(Math.min(1, P[i][j] / Pmax));
+        const w = plotSize / N;
+        ctx.fillRect(ox + i*w, oy + 80 + j*w, w + 0.5, w + 0.5);
+      }
+    }
+    // box
+    ctx.strokeStyle = '#cdc5b5'; ctx.lineWidth = 1;
+    ctx.strokeRect(ox, oy + 80, plotSize, plotSize);
+    // axis labels
+    ctx.fillStyle = '#948c80'; ctx.font = '11px -apple-system, sans-serif';
+    ctx.fillText('source bin i →', ox, oy + 80 + plotSize + 16);
+    ctx.save();
+    ctx.translate(ox - 12, oy + 80 + plotSize/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText('target bin j →', -plotSize/2, 0);
+    ctx.restore();
+
+    // total cost
+    let cost = 0;
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) cost += P[i][j] * C[i][j];
+    ctx.fillStyle = '#1f1d1a'; ctx.font = '12px -apple-system, sans-serif';
+    ctx.fillText(`⟨C, P⟩ = ${cost.toFixed(4)}    H(P) = ${entropy(P).toFixed(3)}`, ox, oy + 80 + plotSize + 32);
+  }
+  function entropy(P) {
+    let h = 0;
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+      const p = P[i][j];
+      if (p > 1e-12) h -= p * Math.log(p);
+    }
+    return h;
+  }
+
+  let playing = false;
+  playBtn.addEventListener('click', () => {
+    if (playing) { playing = false; playBtn.textContent = 'Animate'; return; }
+    playing = true; playBtn.textContent = 'Stop';
+    let t = 0;
+    function step() {
+      if (!playing) return;
+      iterSlider.value = t;
+      draw();
+      t = (t + 2) % 200;
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+  epsSlider.addEventListener('input', draw);
+  iterSlider.addEventListener('input', draw);
+  window.addEventListener('resize', draw);
+  draw();
+})();
+</script>
+
+</body>
+</html>
