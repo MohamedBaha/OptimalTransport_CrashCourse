@@ -65,11 +65,8 @@ OptimalTransport_CrashCourse/
 - **Barycenter Problems**: Computing Fréchet means of distributions
 - **Shape Matching**: Comparing objects in metric space
 
-### Module 7: Advanced Topics
-- Unbalanced optimal transport
-- Sliced and partial OT
-- Multi-marginal problems
-- Scalability and approximations
+### Module 7: Hands-on Code snippets
+- Ready to use code recipes for OT
 
 ### Module 8: Connections & Perspectives
 - OT in machine learning (summary)
