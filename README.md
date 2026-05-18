@@ -1,6 +1,6 @@
 # Optimal Transport — Crash Course
 
-A comprehensive beginner's course on Optimal Transport with accompanying exercises and solutions. This repository contains lecture materials, Jupyter notebooks with theory, and hands-on programming exercises to build intuition for optimal transport concepts.
+A comprehensive beginner's course on Optimal Transport with accompanying exercises and solutions. This repository contains lecture materials, Jupyter notebooks with theory, and hands-on programming exercises.
 
 ## 📚 Course Overview
 
@@ -36,7 +36,7 @@ OptimalTransport_CrashCourse/
 - Computational aspects: simplex, Hungarian algorithm
 
 ### Module 2: Theory & Metrics
-- The Wasserstein distance $W_p$
+- The Wasserstein distance $W_{p}$
 - Metric properties and triangle inequality
 - Closed-form solutions for Gaussians (Bures formula)
 - Connections to $c$-transforms and duality
@@ -133,7 +133,7 @@ Used consistently throughout the course:
 | $a \in \Delta^{n-1}$, $b \in \Delta^{m-1}$ | Discrete probability weights |
 | $C \in \mathbb{R}_{+}^{n \times m}$ | Cost matrix |
 | $P$ | Transport plan (coupling matrix) |
-| $W_p(\mu, \nu)$ | Wasserstein-$p$ distance with cost $c(x,y) = \|x - y\|^p$ |
+| $W_{p}(\mu, \nu)$ | Wasserstein-$p$ distance with cost $c(x,y) = \|x - y\|^{p}$ |
 | $(\varphi, \psi)$ | Kantorovich dual potentials |
 | $\varepsilon$ | Entropic regularization parameter |
 
@@ -181,4 +181,3 @@ GitHub: [@MohamedBaha](https://github.com/MohamedBaha)
 
 **Last Updated**: May 2026  
 **Course Status**: Active development – exercises and materials are continuously improved
-
