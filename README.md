@@ -133,7 +133,7 @@ Used consistently throughout the course:
 | $a \in \Delta^{n-1}$, $b \in \Delta^{m-1}$ | Discrete probability weights |
 | $C \in \mathbb{R}_{+}^{n \times m}$ | Cost matrix |
 | $P$ | Transport plan (coupling matrix) |
-| $W_{p}(\mu, \nu)$ | Wasserstein-${p}$ distance with cost $c(x,y) = \|x - y\|^{p}$ |
+| $W_{p}(\mu, \nu)$ | Wasserstein-p distance with cost $c(x,y) = \|x - y\|^{p}$ |
 | $(\varphi, \psi)$ | Kantorovich dual potentials |
 | $\varepsilon$ | Entropic regularization parameter |
 
